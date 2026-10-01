@@ -17,13 +17,6 @@ import com.example.myapplication.auth.AuthManager
 import com.example.myapplication.ui.theme.AzulMarinho
 import com.example.myapplication.ui.theme.Terracota
 
-/**
- * Menu superior do app (aparece em todas as telas, menos Login e Cadastro).
- *
- * Home e Programado ficam sempre numa pilha "limpa": a Home é a base da
- * pilha e o Programado fica logo acima dela. Assim, apertar várias vezes os
- * botões do menu não empilha telas repetidas.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Menu(
@@ -42,13 +35,11 @@ fun Menu(
         ),
         actions = {
             TextButton(onClick = {
-                // Volta até a Home que já está na base da pilha.
                 navController.popBackStack(route = Home, inclusive = false)
             }) {
                 Text(text = "Home", color = AzulMarinho)
             }
             TextButton(onClick = {
-                // Desempilha tudo que estiver acima da Home e abre o Programado.
                 navController.navigate(Programado) {
                     popUpTo(Home) { inclusive = false }
                 }
@@ -57,8 +48,7 @@ fun Menu(
             }
             IconButton(onClick = {
                 AuthManager.logout()
-                // A Home é a base da pilha: removê-la (inclusive) limpa tudo
-                // e o botão "voltar" não consegue mais entrar no app.
+
                 navController.navigate(Login) {
                     popUpTo(Home) { inclusive = true }
                 }

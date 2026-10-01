@@ -38,14 +38,6 @@ import com.example.myapplication.ui.theme.AzulMarinho
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.Terracota
 
-/**
- * Tela de login do app "Noted".
- *
- * Confere e-mail e senha no AuthManager. Se estiverem corretos chama
- * [loginSucesso] (a navegação para a Home é feita no AppNavigation); se não,
- * mostra a mensagem de erro na própria tela. O link "Cadastre-se" chama
- * [irCadastro]. Esta tela não mostra o Menu.
- */
 @Composable
 fun LoginScreen(
     loginSucesso: () -> Unit,

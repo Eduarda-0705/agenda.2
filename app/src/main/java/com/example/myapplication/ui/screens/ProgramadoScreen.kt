@@ -32,16 +32,7 @@ import com.example.myapplication.ui.theme.CinzaTexto
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.Terracota
 
-/**
- * Tela "Programado": mostra os lembretes agrupados por "Atrasado" e "Hoje".
- *
- * Usa a lista do LembreteManager, então um lembrete criado na tela Novo
- * Lembrete aparece aqui, e marcar/desmarcar como concluído atualiza também
- * os totais da Home.
- *
- * @param voltar volta para a tela anterior (a Home)
- * @param irParaNovoLembrete abre a tela Novo Lembrete
- */
+
 @Composable
 fun ProgramadoScreen(
     modifier: Modifier = Modifier,

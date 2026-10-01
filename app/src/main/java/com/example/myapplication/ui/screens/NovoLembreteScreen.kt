@@ -37,17 +37,6 @@ import com.example.myapplication.ui.theme.CinzaTexto
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.Terracota
 
-/**
- * Tela "Novo Lembrete": formulário para cadastrar um novo item na agenda.
- * Os "toggles" de Data/Hora/Sinalizar são feitos com Button (em vez de
- * Switch), alternando o texto Ativado/Desativado a cada toque.
- *
- * Ao tocar em "Concluído" o lembrete é salvo no LembreteManager (e passa a
- * aparecer na Home e no Programado) e a tela é fechada com [voltar]. O "X"
- * fecha a tela sem salvar.
- *
- * @param voltar volta para a tela anterior
- */
 @Composable
 fun NovoLembreteScreen(
     modifier: Modifier = Modifier,

@@ -5,15 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.myapplication.model.Lembrete
 
-/**
- * Guarda a lista de lembretes que é compartilhada entre as telas
- * (Home, Programado e Novo Lembrete).
- *
- * Segue o mesmo padrão do AuthManager (um `object`). A diferença é que a
- * lista fica dentro de um mutableStateOf: assim, quando um lembrete é
- * adicionado ou marcado como concluído, todas as telas que leem a lista
- * recompõem sozinhas (os números dos cartões da Home, por exemplo).
- */
+
 object LembreteManager {
 
     // Só o LembreteManager pode trocar a lista (private set); as telas

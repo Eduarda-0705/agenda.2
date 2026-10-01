@@ -6,7 +6,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Estilos de texto usados nas telas do Noted
 val Typography = Typography(
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Default,

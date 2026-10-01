@@ -2,7 +2,6 @@ package com.example.myapplication.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Paleta do app "Noted"
 val CremeFundo = Color(0xFFF6EEDC)
 val Terracota = Color(0xFFB35A3E)
 val TerracotaClaro = Color(0xFFD98B6E)

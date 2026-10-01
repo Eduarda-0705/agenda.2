@@ -40,14 +40,6 @@ import com.example.myapplication.ui.theme.AzulMarinho
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.Terracota
 
-/**
- * Tela de cadastro de usuário do app "Noted".
- *
- * Valida os campos na própria tela (mesmo padrão do Formulario visto em
- * aula) e só habilita o botão quando tudo está correto. Se o e-mail ainda
- * não existir no AuthManager, o usuário é cadastrado e [irLogin] volta para
- * a tela de login. Esta tela não mostra o Menu.
- */
 @Composable
 fun CadastroScreen(
     irLogin: () -> Unit

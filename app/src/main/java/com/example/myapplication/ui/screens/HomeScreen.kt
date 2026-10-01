@@ -36,17 +36,7 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.Terracota
 import com.example.myapplication.ui.theme.VermelhoCartao
 
-/**
- * Tela principal (Home) do app Noted.
- *
- * O topo (Menu) é desenhado pelo Scaffold da MainActivity; por isso esta
- * tela não tem Scaffold próprio e só aplica o [modifier] recebido (que traz
- * o espaço do Menu). Os totais dos cartões vêm do LembreteManager, a mesma
- * lista usada pelas telas Programado e Novo Lembrete.
- *
- * @param irParaProgramado abre a tela Programado
- * @param irParaNovoLembrete abre a tela Novo Lembrete
- */
+
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
