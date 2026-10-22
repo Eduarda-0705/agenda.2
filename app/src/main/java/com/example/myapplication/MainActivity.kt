@@ -23,11 +23,9 @@ class MainActivity : ComponentActivity() {
             MyApplicationTheme {
                 val navController = rememberNavController()
 
-                // Descobre em qual tela o usuário está agora.
                 val pilhaRotas by navController.currentBackStackEntryAsState()
                 val rotaAtual = pilhaRotas?.destination?.route
 
-                // O menu só aparece fora das telas de Login e Cadastro.
                 val mostrarMenu = rotaAtual != null &&
                         !rotaAtual.contains("Login") &&
                         !rotaAtual.contains("Cadastro")

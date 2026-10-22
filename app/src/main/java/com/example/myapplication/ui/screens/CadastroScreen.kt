@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -19,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,23 +34,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.R
-import com.example.myapplication.auth.AuthManager
 import com.example.myapplication.ui.theme.AzulMarinho
-import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.Terracota
+import com.example.myapplication.ui.viewmodel.AuthViewModel
 
 @Composable
 fun CadastroScreen(
-    irLogin: () -> Unit
+    modifier: Modifier = Modifier,
+    irLogin: () -> Unit,
+    authViewModel: AuthViewModel
 ) {
     var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var senhaVisivel by remember { mutableStateOf(false) }
-    var mensagemErro by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     val nomeInvalido = nome.isNotEmpty() && nome.trim().length < 3
@@ -59,10 +60,23 @@ fun CadastroScreen(
             email.contains("@") && email.contains(".") &&
             senha.length >= 6
 
+    LaunchedEffect(authViewModel.concluido) {
+        if (authViewModel.concluido) {
+            authViewModel.consumirResultado()
+            Toast.makeText(
+                context,
+                "Cadastro realizado com sucesso!",
+                Toast.LENGTH_SHORT
+            ).show()
+            irLogin()
+        }
+    }
+
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .safeDrawingPadding()
+            .imePadding()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -103,8 +117,8 @@ fun CadastroScreen(
                 OutlinedTextField(
                     value = nome,
                     onValueChange = {
-                        nome = it
-                        mensagemErro = ""
+                        if (it.length <= 100) nome = it
+                        authViewModel.limparMensagem()
                     },
                     isError = nomeInvalido,
                     label = { Text("Seu nome completo") },
@@ -112,6 +126,7 @@ fun CadastroScreen(
                         Icon(painterResource(id = R.drawable.ic_user), contentDescription = null)
                     },
                     singleLine = true,
+                    enabled = !authViewModel.carregando,
                     modifier = Modifier.fillMaxWidth()
                 )
                 if (nomeInvalido) {
@@ -127,8 +142,8 @@ fun CadastroScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = {
-                        email = it
-                        mensagemErro = ""
+                        if (it.length <= 254) email = it
+                        authViewModel.limparMensagem()
                     },
                     isError = emailInvalido,
                     label = { Text("Seu e-mail") },
@@ -136,6 +151,7 @@ fun CadastroScreen(
                         Icon(painterResource(id = R.drawable.ic_mail), contentDescription = null)
                     },
                     singleLine = true,
+                    enabled = !authViewModel.carregando,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -152,8 +168,8 @@ fun CadastroScreen(
                 OutlinedTextField(
                     value = senha,
                     onValueChange = {
-                        senha = it
-                        mensagemErro = ""
+                        if (it.length <= 128) senha = it
+                        authViewModel.limparMensagem()
                     },
                     isError = senhaInvalida,
                     label = { Text("Crie uma senha") },
@@ -170,60 +186,44 @@ fun CadastroScreen(
                         )
                     },
                     singleLine = true,
+                    enabled = !authViewModel.carregando,
                     visualTransformation = if (senhaVisivel) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     modifier = Modifier.fillMaxWidth()
                 )
                 if (senhaInvalida) {
                     Text(
-                        text = "A senha precisa ter pelo menos 6 caracteres.",
+                        text = "A senha precisa ter entre 6 e 128 caracteres.",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
             }
 
-            if (mensagemErro.isNotEmpty()) {
-                Text(text = mensagemErro, color = MaterialTheme.colorScheme.error)
+            authViewModel.mensagem?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.error)
             }
 
+            if (authViewModel.carregando) Text(text = "Aguarde...", color = AzulMarinho)
+
             Button(
-                onClick = {
-                    if (AuthManager.cadastro(nome, email, senha)) {
-                        Toast.makeText(
-                            context,
-                            "Cadastro realizado com sucesso! Faça seu login.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        irLogin()
-                    } else {
-                        mensagemErro = "Este e-mail já está cadastrado."
-                    }
-                },
-                enabled = formularioValido,
+                onClick = { authViewModel.cadastrar(nome, email, senha) },
+                enabled = formularioValido && !authViewModel.carregando,
                 colors = ButtonDefaults.buttonColors(containerColor = AzulMarinho),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "CRIAR MINHA CONTA")
+                Text(text = "CRIAR CONTA")
             }
 
             Text(
-                text = "Já tem uma conta? Entrar",
+                text = "Voltar",
                 color = AzulMarinho,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { irLogin() }
+                    .clickable(enabled = !authViewModel.carregando) { irLogin() }
                     .padding(vertical = 8.dp),
                 textAlign = TextAlign.Center
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun CadastroScreenPreview() {
-    MyApplicationTheme {
-        CadastroScreen(irLogin = {})
     }
 }

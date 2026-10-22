@@ -1,54 +1,56 @@
 package com.example.myapplication.ui.screens
 
-import android.R as AndroidR
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.R
-import com.example.myapplication.data.LembreteManager
 import com.example.myapplication.ui.theme.AzulMarinho
 import com.example.myapplication.ui.theme.CinzaTexto
-import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.Terracota
+import com.example.myapplication.ui.viewmodel.LembreteViewModel
 
 @Composable
 fun NovoLembreteScreen(
     modifier: Modifier = Modifier,
+    lembreteId: Long? = null,
+    viewModel: LembreteViewModel,
     voltar: () -> Unit
 ) {
-    var titulo by remember { mutableStateOf("") }
-    var notas by remember { mutableStateOf("") }
-    var comData by remember { mutableStateOf(false) }
-    var comHora by remember { mutableStateOf(false) }
-    var sinalizado by remember { mutableStateOf(false) }
+    LaunchedEffect(lembreteId) {
+        if (lembreteId != null) viewModel.buscarPorId(lembreteId)
+    }
+    LaunchedEffect(viewModel.salvo) {
+        if (viewModel.salvo) {
+            viewModel.consumirSalvo()
+            voltar()
+        }
+    }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize().imePadding()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -65,27 +67,18 @@ fun NovoLembreteScreen(
                     .size(24.dp)
             )
             Text(
-                text = "Novo Lembrete",
+                text = if (lembreteId == null) "Novo Lembrete" else "Alterar Lembrete",
                 style = MaterialTheme.typography.titleLarge,
                 color = Terracota,
                 modifier = Modifier.weight(1f)
             )
             Button(
-                onClick = {
-                    LembreteManager.adicionar(
-                        titulo = titulo,
-                        notas = notas,
-                        horario = if (comHora) "Hoje" else "",
-                        grupo = "Hoje"
-                    )
-                    voltar()
-                },
-                // Só permite salvar se o título foi preenchido.
-                enabled = titulo.isNotBlank(),
+                onClick = viewModel::salvar,
+                enabled = viewModel.titulo.isNotBlank() && !viewModel.carregando && !viewModel.salvo,
                 colors = ButtonDefaults.buttonColors(containerColor = AzulMarinho),
                 modifier = Modifier.padding(end = 8.dp)
             ) {
-                Text(text = "Concluído")
+                Text(text = "Salvar")
             }
         }
 
@@ -95,26 +88,33 @@ fun NovoLembreteScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
         ) {
+            viewModel.mensagem?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.error)
+            }
+            if (viewModel.carregando) CircularProgressIndicator(color = Terracota)
+
             SecaoTitulo(texto = "Nota")
             Surface(modifier = Modifier.fillMaxWidth(), color = Color.White) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
-                        value = titulo,
-                        onValueChange = { titulo = it },
+                        value = viewModel.titulo,
+                        onValueChange = viewModel::mudarTitulo,
                         label = { Text("Título") },
                         leadingIcon = {
                             Icon(painterResource(id = R.drawable.ic_note_add), contentDescription = null)
                         },
                         singleLine = true,
+                        enabled = !viewModel.carregando,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = notas,
-                        onValueChange = { notas = it },
+                        value = viewModel.notas,
+                        onValueChange = viewModel::mudarNotas,
                         label = { Text("Notas") },
                         leadingIcon = {
                             Icon(painterResource(id = R.drawable.ic_notes), contentDescription = null)
                         },
+                        enabled = !viewModel.carregando,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -123,17 +123,32 @@ fun NovoLembreteScreen(
             SecaoTitulo(texto = "Detalhes")
             Surface(modifier = Modifier.fillMaxWidth(), color = Color.White) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LinhaAlternar(
-                        icone = R.drawable.ic_calendar,
-                        texto = "Data",
-                        ativado = comData,
-                        onClick = { comData = !comData }
+                    OutlinedTextField(
+                        value = viewModel.data,
+                        onValueChange = viewModel::mudarData,
+                        label = { Text("Data (dd/mm/aaaa)") },
+                        leadingIcon = {
+                            Icon(painterResource(id = R.drawable.ic_calendar), contentDescription = null)
+                        },
+                        singleLine = true,
+                        enabled = !viewModel.carregando,
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    LinhaAlternar(
-                        icone = R.drawable.ic_clock,
-                        texto = "Hora",
-                        ativado = comHora,
-                        onClick = { comHora = !comHora }
+                    OutlinedTextField(
+                        value = viewModel.horario,
+                        onValueChange = viewModel::mudarHorario,
+                        label = { Text("Hora (hh:mm)") },
+                        leadingIcon = {
+                            Icon(painterResource(id = R.drawable.ic_clock), contentDescription = null)
+                        },
+                        singleLine = true,
+                        enabled = !viewModel.carregando,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = "Preencha data ou hora para o lembrete aparecer em Programado.",
+                        color = CinzaTexto,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     LinhaEstatica(icone = R.drawable.ic_list, texto = "Lista", valor = "Lembretes")
                 }
@@ -145,10 +160,9 @@ fun NovoLembreteScreen(
                     LinhaAlternar(
                         icone = R.drawable.ic_flag,
                         texto = "Sinalizar",
-                        ativado = sinalizado,
-                        onClick = { sinalizado = !sinalizado }
+                        ativado = viewModel.sinalizado,
+                        onClick = viewModel::alternarSinalizado
                     )
-                    LinhaEstatica(icone = AndroidR.drawable.star_on, texto = "Prioridade", valor = "Nenhuma")
                 }
             }
         }
@@ -215,13 +229,5 @@ private fun LinhaEstatica(icone: Int, texto: String, valor: String) {
                 .padding(start = 12.dp)
         )
         Text(text = valor, color = CinzaTexto)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun NovoLembreteScreenPreview() {
-    MyApplicationTheme {
-        NovoLembreteScreen(voltar = {})
     }
 }

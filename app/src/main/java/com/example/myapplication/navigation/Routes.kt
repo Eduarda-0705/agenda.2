@@ -15,4 +15,19 @@ data object Home
 data object Programado
 
 @Serializable
+data object Lembretes
+
+@Serializable
 data object NovoLembrete
+
+@Serializable
+data class EditarLembrete(val id: Long)
+
+@Serializable
+data object Usuarios
+
+@Serializable
+data object NovoUsuario
+
+@Serializable
+data class UsuarioEditar(val id: Long)

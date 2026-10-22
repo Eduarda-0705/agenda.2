@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -18,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,28 +32,34 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.R
-import com.example.myapplication.auth.AuthManager
 import com.example.myapplication.ui.theme.AzulMarinho
-import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.Terracota
+import com.example.myapplication.ui.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
     loginSucesso: () -> Unit,
-    irCadastro: () -> Unit
+    irCadastro: () -> Unit,
+    authViewModel: AuthViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var senhaVisivel by remember { mutableStateOf(false) }
-    var mensagemErro by remember { mutableStateOf("") }
+
+    LaunchedEffect(authViewModel.concluido) {
+        if (authViewModel.concluido) {
+            authViewModel.consumirResultado()
+            loginSucesso()
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .safeDrawingPadding()
+            .imePadding()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -92,15 +100,16 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = {
-                        email = it
-                        mensagemErro = ""
+                        if (it.length <= 254) email = it
+                        authViewModel.limparMensagem()
                     },
-                    isError = mensagemErro.isNotEmpty() && email.isBlank(),
+                    isError = authViewModel.mensagem != null,
                     label = { Text("Seu e-mail") },
                     leadingIcon = {
                         Icon(painterResource(id = R.drawable.ic_mail), contentDescription = null)
                     },
                     singleLine = true,
+                    enabled = !authViewModel.carregando,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -111,10 +120,10 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = senha,
                     onValueChange = {
-                        senha = it
-                        mensagemErro = ""
+                        if (it.length <= 128) senha = it
+                        authViewModel.limparMensagem()
                     },
-                    isError = mensagemErro.isNotEmpty() && senha.isBlank(),
+                    isError = authViewModel.mensagem != null,
                     label = { Text("Sua senha") },
                     leadingIcon = {
                         Icon(painterResource(id = R.drawable.ic_lock), contentDescription = null)
@@ -129,26 +138,25 @@ fun LoginScreen(
                         )
                     },
                     singleLine = true,
+                    enabled = !authViewModel.carregando,
                     visualTransformation = if (senhaVisivel) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            if (mensagemErro.isNotEmpty()) {
-                Text(text = mensagemErro, color = MaterialTheme.colorScheme.error)
+            authViewModel.mensagem?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.error)
             }
+
+            if (authViewModel.carregando) Text(text = "Aguarde...", color = AzulMarinho)
 
             Button(
                 onClick = {
-                    if (email.isBlank() || senha.isBlank()) {
-                        mensagemErro = "Preencha e-mail e senha para continuar."
-                    } else if (AuthManager.login(email, senha)) {
-                        loginSucesso()
-                    } else {
-                        mensagemErro = "E-mail ou senha inválidos."
-                    }
+                    authViewModel.login(email, senha)
+                    senha = ""
                 },
+                enabled = !authViewModel.carregando,
                 colors = ButtonDefaults.buttonColors(containerColor = AzulMarinho),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -156,31 +164,15 @@ fun LoginScreen(
             }
 
             Text(
-                text = "Esqueceu a senha?",
-                color = AzulMarinho,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                textAlign = TextAlign.Center
-            )
-            Text(
                 text = "Não tem uma conta? Cadastre-se",
                 color = AzulMarinho,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { irCadastro() }
+                    .clickable(enabled = !authViewModel.carregando) { irCadastro() }
                     .padding(vertical = 8.dp),
                 textAlign = TextAlign.Center
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun LoginScreenPreview() {
-    MyApplicationTheme {
-        LoginScreen(loginSucesso = {}, irCadastro = {})
     }
 }

@@ -13,7 +13,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavHostController
 import com.example.myapplication.R
-import com.example.myapplication.auth.AuthManager
+import com.example.myapplication.auth.SessaoUsuario
 import com.example.myapplication.ui.theme.AzulMarinho
 import com.example.myapplication.ui.theme.Terracota
 
@@ -47,10 +47,9 @@ fun Menu(
                 Text(text = "Programado", color = AzulMarinho)
             }
             IconButton(onClick = {
-                AuthManager.logout()
-
+                SessaoUsuario.encerrar()
                 navController.navigate(Login) {
-                    popUpTo(Home) { inclusive = true }
+                    popUpTo(0) { inclusive = true }
                 }
             }) {
                 Icon(
